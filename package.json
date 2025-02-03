@@ -1,0 +1,22 @@
+{
+  "name": "opendata",
+  "version": "1.0.0",
+  "description": "",
+  "main": "import.js",
+  "scripts": {
+    "dev": "nodemon import.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.1.0",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@opendatasoft/api-client": "^21.6.0",
+    "axios": "^1.7.9"
+  }
+}
