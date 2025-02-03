@@ -1,14 +1,21 @@
+import dotenv from 'dotenv';
 import { ApiClient, fromCatalog } from "@opendatasoft/api-client";
 import axios from 'axios';
 import { Login, Record, ApiResponse, LocationFormData, LoginResponse } from './types';
 
-const serverURL = process.env.SERVER_URL || 'http://localhost:3000';
+dotenv.config();
+const serverURL = process.env.SERVER_URL || 'http://localhost:3001';
 axios.defaults.baseURL = serverURL;
 console.log('Server URL:', serverURL);
 
+if (!process.env.USERNAME || !process.env.PASSWORD) {
+  console.error('USERNAME and PASSWORD environment variables must be set');
+  process.exit(1);
+}
+
 const loginData: Login = {
-  username: 'admin',
-  password: 'admin',
+  username: process.env.USERNAME,
+  password: process.env.PASSWORD,
 }
 
 axios.post(`/api/auth/login`, loginData)
@@ -17,7 +24,10 @@ axios.post(`/api/auth/login`, loginData)
     axios.defaults.headers.common['Authorization'] = response.data;
     console.log('Login Successful');
   })
-  .catch((error: unknown) => console.error(error));
+  .catch((error: unknown) => {
+    console.error(error);
+    process.exit(1);
+  });
 
 const client = new ApiClient({ domain: "documentation-resources" });
 

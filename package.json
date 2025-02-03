@@ -4,7 +4,7 @@
   "description": "",
   "main": "import.js",
   "scripts": {
-    "dev": "nodemon import.ts"
+    "import": "nodemon import.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@opendatasoft/api-client": "^21.6.0",
-    "axios": "^1.7.9"
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7"
   }
 }
