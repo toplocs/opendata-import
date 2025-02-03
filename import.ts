@@ -34,39 +34,39 @@ axios.post(`/api/auth/login`, loginData)
 
 // Fetch data from opendatasoft API
 const client = new ApiClient({ domain: "documentation-resources" });
-
-const query = fromCatalog()
+const baseQuery = fromCatalog()
   .dataset("geonames-all-cities-with-a-population-1000")
   .records()
   .select('name, population, cou_name_en, coordinates')
   .where("country_code:'DE'")
   .orderBy("-population")
   .limit(100)
-  .offset(200)
-  .toString();
 
-client.get(query)
-  .then(async (response: unknown) => {
-    for (const record of (response as ApiResponse).results) {
-      const locationData: LocationFormData = {
-        title: record.name,
-        xCoordinate: record.coordinates.lat.toString(),
-        yCoordinate: record.coordinates.lon.toString(),
-        zoom: "12",
-        access: 0,
-        relations: "[]",
-      };
+  for (let offset = 0; offset < 300; offset += 100) {
+    const query = baseQuery.offset(offset).toString();
+    client.get(query)
+      .then(async (response: unknown) => {
+        for (const record of (response as ApiResponse).results) {
+          const locationData: LocationFormData = {
+            title: record.name,
+            xCoordinate: record.coordinates.lat.toString(),
+            yCoordinate: record.coordinates.lon.toString(),
+            zoom: "12",
+            access: 0,
+            relations: "[]",
+          };
 
-      const location = await getLocation(record.name);
-      if (location.length > 0) {
-        // console.log('Location already exists. Found ', location.length);
-        continue;
-      }
-      await createLocation(locationData);
-      console.log('Created Location: ', record.name, record.population, record.cou_name_en);
-    }
-  })
-  .catch((error: unknown) => console.error(error));
+          const location = await getLocation(record.name);
+          if (location.length > 0) {
+            // console.log('Location already exists. Found ', location.length);
+            continue;
+          }
+          await createLocation(locationData);
+          console.log('Created Location: ', record.name, record.population, record.cou_name_en);
+        }
+      })
+      .catch((error: unknown) => console.error(error));
+  }
 
 async function getLocation(name: string) {
   try {
