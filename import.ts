@@ -4,10 +4,12 @@ import axios from 'axios';
 import { Login, Record, ApiResponse, LocationFormData, LoginResponse } from './types';
 
 dotenv.config();
-const serverURL = process.env.SERVER_URL || 'http://localhost:3001';
+const serverURL = process.env.SERVER_URL || 'http://localhost:3000';
 axios.defaults.baseURL = serverURL;
+axios.defaults.family = 4; // Force IPv4
 console.log('Server URL:', serverURL);
 
+// Login and fetch Authorization Token
 if (!process.env.USERNAME || !process.env.PASSWORD) {
   console.error('USERNAME and PASSWORD environment variables must be set');
   process.exit(1);
@@ -29,6 +31,8 @@ axios.post(`/api/auth/login`, loginData)
     process.exit(1);
   });
 
+
+// Fetch data from opendatasoft API
 const client = new ApiClient({ domain: "documentation-resources" });
 
 const query = fromCatalog()
@@ -37,13 +41,13 @@ const query = fromCatalog()
   .select('name, population, cou_name_en, coordinates')
   .where("country_code:'DE'")
   .orderBy("-population")
-  .limit(1)
+  .limit(100)
+  .offset(200)
   .toString();
 
 client.get(query)
-  .then((response: unknown) => {
-    (response as ApiResponse).results.forEach(async record => {
-      console.log(record);
+  .then(async (response: unknown) => {
+    for (const record of (response as ApiResponse).results) {
       const locationData: LocationFormData = {
         title: record.name,
         xCoordinate: record.coordinates.lat.toString(),
@@ -52,15 +56,30 @@ client.get(query)
         access: 0,
         relations: "[]",
       };
-      console.log(locationData);
+
+      const location = await getLocation(record.name);
+      if (location.length > 0) {
+        // console.log('Location already exists. Found ', location.length);
+        continue;
+      }
       await createLocation(locationData);
-    });
+      console.log('Created Location: ', record.name, record.population, record.cou_name_en);
+    }
   })
   .catch((error: unknown) => console.error(error));
 
+async function getLocation(name: string) {
+  try {
+    const response = await axios.get(`/api/location?title=${encodeURIComponent(name)}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching location:', error);
+    throw error;
+  }
+}
 async function createLocation(formData: LocationFormData) {
   try {
-    const response = await axios.post('http://localhost:3000/api/location', formData, {
+    const response = await axios.post('/api/location', formData, {
       headers: {
         'Content-Type': 'application/json',
       }
