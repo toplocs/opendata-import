@@ -128,11 +128,3 @@ function calculateZoom(population: number): string {
   return "14";                             // Village/District
 }
 
-
-function hello(): void {
-  console.log('Hello Felix');
-}
-
-function test() {
-  return "test";
-}
