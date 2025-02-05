@@ -129,6 +129,6 @@ function calculateZoom(population: number): string {
 }
 
 function hello(): void {
-  console.log('Hello');
+  console.log('Hello Felix');
 }
 
