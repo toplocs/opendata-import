@@ -117,7 +117,7 @@ async function updateLocation(id: string, formData: LocationFormData) {
 }
 
 function calculateZoom(population: number): string {
-  if (population > 5000000) return "5";    // Country/Region
+  if (population > 5000000) return "4";    // Country/Region
   if (population > 2000000) return "7";    // Large metropolitan
   if (population > 1000000) return "8";    // Metropolitan
   if (population > 500000) return "9";     // Large city
