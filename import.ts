@@ -40,35 +40,40 @@ const baseQuery = fromCatalog()
   .select('name, population, cou_name_en, coordinates')
   .where("country_code:'DE'")
   .orderBy("-population")
-  .limit(100)
+  .limit(2)
 
-  for (let offset = 0; offset < 300; offset += 100) {
-    const query = baseQuery.offset(offset).toString();
-    client.get(query)
-      .then(async (response: unknown) => {
-        for (const record of (response as ApiResponse).results) {
-          const locationData: LocationFormData = {
-            title: record.name,
-            xCoordinate: record.coordinates.lat.toString(),
-            yCoordinate: record.coordinates.lon.toString(),
-            zoom: "12",
-            access: 0,
-            relations: "[]",
-          };
+for (let offset = 0; offset < 100; offset += 100) {
+  const query = baseQuery.offset(offset).toString();
+  client.get(query)
+    .then(async (response: unknown) => {
+      for (const record of (response as ApiResponse).results) {
+        const locationData: LocationFormData = {
+          title: record.name,
+          xCoordinate: record.coordinates.lat.toString(),
+          yCoordinate: record.coordinates.lon.toString(),
+          zoom: calculateZoom(record.population),
+          access: 0,
+          relations: "[]",
+        };
 
-          const location = await getLocation(record.name);
-          if (location.length > 0) {
-            // console.log('Location already exists. Found ', location.length);
-            continue;
-          }
+        const locations: LocationFormData[] = await getLocationsByName(record.name);
+        const foundLocation = locations.find((loc: LocationFormData) => 
+          loc.title === record.name
+        );
+        console.log("Found: ", foundLocation)
+        if (foundLocation && foundLocation.id) {
+          await updateLocation(foundLocation.id, locationData);
+          console.log('Updaterd Location: ', record.name, record.cou_name_en);
+        } else {
           await createLocation(locationData);
-          console.log('Created Location: ', record.name, record.population, record.cou_name_en);
+          console.log('Created Location: ', record.name, record.cou_name_en);
         }
-      })
-      .catch((error: unknown) => console.error(error));
-  }
+      }
+    })
+    .catch((error: unknown) => console.error(error));
+}
 
-async function getLocation(name: string) {
+async function getLocationsByName(name: string) {
   try {
     const response = await axios.get(`/api/location?title=${encodeURIComponent(name)}`);
     return response.data;
@@ -77,6 +82,7 @@ async function getLocation(name: string) {
     throw error;
   }
 }
+
 async function createLocation(formData: LocationFormData) {
   try {
     const response = await axios.post('/api/location', formData, {
@@ -90,3 +96,35 @@ async function createLocation(formData: LocationFormData) {
     throw error;
   }
 }
+
+async function updateLocation(id: string, formData: LocationFormData) {
+  try {
+    const data = {
+      locationId: id, 
+      ...formData
+    };
+    const response = await axios.put(`/api/location`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    console.log("Updated: ", response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating location:', error);
+    throw error;
+  }
+}
+
+function calculateZoom(population: number): string {
+  if (population > 5000000) return "5";    // Country/Region
+  if (population > 2000000) return "7";    // Large metropolitan
+  if (population > 1000000) return "8";    // Metropolitan
+  if (population > 500000) return "9";     // Large city
+  if (population > 200000) return "10";    // City
+  if (population > 100000) return "11";    // Small city
+  if (population > 50000) return "12";     // Town
+  if (population > 20000) return "13";     // Small town
+  return "14";                             // Village/District
+}
+
