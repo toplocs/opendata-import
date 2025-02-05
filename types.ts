@@ -22,6 +22,7 @@ export interface ApiResponse {
 }
 
 export interface LocationFormData {
+  id?: string;
   title: string;
   xCoordinate: string;
   yCoordinate: string;
