@@ -7,7 +7,7 @@ export interface LoginResponse {
   data: string;
 }
 
-export interface Record {
+export interface CityRecord {
   name: string;
   population: number;
   cou_name_en: string;
@@ -17,8 +17,22 @@ export interface Record {
   };
 }
 
-export interface ApiResponse {
-  results: Record[];
+export interface CountryRecord {
+  name: string;
+  continent: string;
+  pop_est: number;
+  geo_point_2d: {
+    lat: number;
+    lon: number;
+  };
+}
+
+export interface CityApiResponse {
+  results: CityRecord[];
+}
+
+export interface CountryApiResponse {
+  results: CountryRecord[];
 }
 
 export interface LocationFormData {
@@ -29,4 +43,9 @@ export interface LocationFormData {
   zoom: string;
   access?: number;
   relations?: string;
+}
+
+export interface Interest {
+  id: string;
+  title: string;
 }
